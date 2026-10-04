@@ -11,11 +11,11 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.3" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
-    <Compile Include="..\TradutorMods\Models.cs" Link="Models.cs" />
-    <Compile Include="..\TradutorMods\TranslationService.cs" Link="TranslationService.cs" />
-    <Compile Include="..\TradutorMods\TranslationLocales.cs" Link="TranslationLocales.cs" />
-    <Compile Include="..\TradutorMods\UiLanguage.cs" Link="UiLanguage.cs" />
-    <Compile Include="..\TradutorMods\ConfigBackupService.cs" Link="ConfigBackupService.cs" />
+    <Compile Include="..\Valley-Mod-Keeper\Models.cs" Link="Models.cs" />
+    <Compile Include="..\Valley-Mod-Keeper\TranslationService.cs" Link="TranslationService.cs" />
+    <Compile Include="..\Valley-Mod-Keeper\TranslationLocales.cs" Link="TranslationLocales.cs" />
+    <Compile Include="..\Valley-Mod-Keeper\UiLanguage.cs" Link="UiLanguage.cs" />
+    <Compile Include="..\Valley-Mod-Keeper\ConfigBackupService.cs" Link="ConfigBackupService.cs" />
     <None Include="Assets\app.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="install.sh" CopyToOutputDirectory="PreserveNewest" />
     <None Include="README-INSTALAR-NO-DECK.txt" CopyToOutputDirectory="PreserveNewest" />

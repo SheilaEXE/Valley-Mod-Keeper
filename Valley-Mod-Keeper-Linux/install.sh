@@ -5,11 +5,9 @@ set -euo pipefail
 source_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 app_dir="${HOME}/.local/share/TradutorModsDeck"
 applications_dir="${HOME}/.local/share/applications"
-desktop_dir="${HOME}/Desktop"
 launcher="${applications_dir}/tradutor-mods-deck.desktop"
-desktop_shortcut="${desktop_dir}/Transferencia de Arquivos de Traducoes de Mods.desktop"
 
-mkdir -p "$app_dir" "$applications_dir" "$desktop_dir"
+mkdir -p "$app_dir" "$applications_dir"
 cp -a "$source_dir"/. "$app_dir"/
 chmod +x "$app_dir/TradutorModsDeck"
 
@@ -27,8 +25,24 @@ Categories=Utility;Game;
 StartupNotify=true
 EOF
 
-cp -f "$launcher" "$desktop_shortcut"
-chmod +x "$launcher" "$desktop_shortcut"
+chmod +x "$launcher"
+
+desktop_dir="${HOME}/Desktop"
+if command -v xdg-user-dir >/dev/null 2>&1; then
+  detected_desktop_dir="$(xdg-user-dir DESKTOP 2>/dev/null)" || detected_desktop_dir=""
+  if [[ -n "$detected_desktop_dir" ]]; then
+    desktop_dir="$detected_desktop_dir"
+  fi
+fi
+if [[ -d "$desktop_dir" ]]; then
+  desktop_shortcut="${desktop_dir}/Valley Modkeeper.desktop"
+  legacy_shortcut="${desktop_dir}/Transferencia de Arquivos de Traducoes de Mods.desktop"
+  if [[ -f "$legacy_shortcut" ]]; then
+    desktop_shortcut="$legacy_shortcut"
+  fi
+  cp -f "$launcher" "$desktop_shortcut"
+  chmod +x "$desktop_shortcut"
+fi
 
 if command -v update-desktop-database >/dev/null 2>&1; then
   update-desktop-database "$applications_dir" >/dev/null 2>&1 || true
@@ -36,4 +50,4 @@ fi
 
 echo
 echo "Instalacao concluida!"
-echo "Abra o Valley Modkeeper pelo icone na Area de Trabalho ou pelo menu de aplicativos."
+echo "Abra o Valley Modkeeper pelo menu de aplicativos ou pelo atalho da Area de Trabalho, se disponivel."

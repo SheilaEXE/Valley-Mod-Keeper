@@ -10,7 +10,8 @@ Packages with multiple components are grouped in the list. Selecting a package s
 
 Download the ready-to-use ZIP for your operating system from the [latest release](https://github.com/SheilaEXE/Valley-Mod-Keeper/releases/latest). The repository folders contain source code, not the ready-to-run application.
 
-- **Windows (PC):** extract the Windows ZIP and open `ValleyModkeeper.exe`.
+- **Windows x64 (PC):** extract the Windows x64 ZIP and open `ValleyModkeeper.exe`.
+- **Windows x86 (32-bit, experimental):** extract the Windows x86 ZIP and open `ValleyModkeeper.exe`. The executable was verified as 32-bit and started on 64-bit Windows, but has not yet been tested on a 32-bit Windows installation.
 - **Linux x86-64 (including Steam Deck):** extract the Linux ZIP and run `bash install.sh` from the extracted folder. Open Valley Modkeeper from your applications menu; a desktop shortcut is also created if a desktop folder exists. Installation is per-user and does not require `sudo`. Other Linux distributions have not yet been tested.
 
 Choose your translation library and Stardew Valley `Mods` folder in the app, and verify both paths before applying translations. The installer does not install or remove game mods.
@@ -19,4 +20,4 @@ The Windows title font is Pixelify Sans. Its license is in [`Valley-Mod-Keeper/A
 
 ---
 
-Em português: o programa aceita traduções no idioma selecionado; a interface, por enquanto, está disponível em inglês e português do Brasil. Baixe o ZIP para Windows ou Linux na página de lançamentos. A versão Linux x86-64 foi testada apenas no Steam Deck até agora. Escolha sua biblioteca de traduções e a pasta `Mods`, selecione o idioma e clique em **Analisar**. Confira os destinos incertos antes de aplicar.
+Em português: o programa aceita traduções no idioma selecionado; a interface, por enquanto, está disponível em inglês e português do Brasil. Baixe o ZIP adequado ao seu sistema na página de lançamentos. O pacote Windows x86 (32 bits) é experimental e ainda não foi testado num Windows de 32 bits. A versão Linux x86-64 foi testada apenas no Steam Deck até agora. Escolha sua biblioteca de traduções e a pasta `Mods`, selecione o idioma e clique em **Analisar**. Confira os destinos incertos antes de aplicar.

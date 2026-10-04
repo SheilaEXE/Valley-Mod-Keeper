@@ -22,8 +22,5 @@ Download the ready-to-use ZIP for your operating system from the [latest release
 
 Choose your translation library and Stardew Valley `Mods` folder in the app, and verify both paths before applying translations. The installer does not install or remove game mods.
 
-The Windows title font is Pixelify Sans. Its license is in [`Valley-Mod-Keeper/Assets/PixelifySans-OFL.txt`](Valley-Mod-Keeper/Assets/PixelifySans-OFL.txt).
-
 ---
 
-Em português: o programa aceita traduções no idioma selecionado; a interface, por enquanto, está disponível em inglês e português do Brasil. Baixe o ZIP adequado ao seu sistema na página de lançamentos. O pacote Windows x86 (32 bits) é experimental e ainda não foi testado num Windows de 32 bits. A versão Linux x86-64 foi testada apenas no Steam Deck até agora. Escolha sua biblioteca de traduções e a pasta `Mods`, selecione o idioma e clique em **Analisar**. Confira os destinos incertos antes de aplicar.

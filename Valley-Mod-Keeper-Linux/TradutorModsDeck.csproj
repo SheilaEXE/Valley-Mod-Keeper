@@ -18,6 +18,6 @@
     <Compile Include="..\Valley-Mod-Keeper\ConfigBackupService.cs" Link="ConfigBackupService.cs" />
     <None Include="Assets\app.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="install.sh" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="README-INSTALAR-NO-DECK.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="README-INSTALAR-NO-LINUX.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

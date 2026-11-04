@@ -26,6 +26,7 @@ internal sealed class ConfigWindow : Window
         this.modsRoot = modsRoot;
         this.modService = modService;
         Title = T("Backup de configurações dos mods", "Mod settings backup");
+        Icon = new WindowIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "app.png"));
         Width = 1080; Height = 670; MinWidth = 820; MinHeight = 510;
         Background = Brush("#0A1F35");
         var root = new Grid { Margin = new Thickness(22), RowDefinitions = new RowDefinitions("Auto,*,Auto") };

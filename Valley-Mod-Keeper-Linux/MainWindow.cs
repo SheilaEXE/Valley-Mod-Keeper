@@ -40,6 +40,7 @@ internal sealed class MainWindow : Window
     public MainWindow()
     {
         Title = "Valley Modkeeper";
+        Icon = new WindowIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "app.png"));
         Width = 1180; Height = 740; MinWidth = 900; MinHeight = 600;
         Background = Brush("#0A1F35");
         var root = new Grid { Margin = new Thickness(22), RowDefinitions = new RowDefinitions("Auto,Auto,*,Auto") };

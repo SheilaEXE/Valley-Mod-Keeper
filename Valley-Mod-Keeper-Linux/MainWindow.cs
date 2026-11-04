@@ -24,7 +24,7 @@ internal sealed class MainWindow : Window
     private readonly TextBox mods = Field(FindInitialModsPath());
     private readonly TextBox search = Field();
     private readonly ComboBox interfaceLanguage = new() { ItemsSource = new[] { "Português (Brasil)", "English" }, SelectedIndex = UiLanguage.Portuguese ? 0 : 1, Width = 155 };
-    private readonly ComboBox locale = new() { ItemsSource = new[] { "pt-BR", "en", "es", "fr", "de", "it", "ja", "ko", "zh-Hans", "zh-Hant", "ru", "tr", "pl", "cs" }, SelectedItem = UiLanguage.TranslationLocale, Width = 140 };
+    private readonly ComboBox locale = new() { ItemsSource = new[] { "pt-BR", "en", "es", "fr", "de", "it", "ja", "ko", "zh-Hans", "zh-Hant", "ru", "tr", "pl", "cs" }.Select(TranslationLocales.DisplayOption).ToArray(), SelectedItem = TranslationLocales.DisplayOption(UiLanguage.TranslationLocale), Width = 140 };
     private readonly TextBlock summary = new() { Foreground = Brush("#AEE0E7"), VerticalAlignment = VerticalAlignment.Center };
     private readonly TextBlock subtitle = new() { Foreground = Brush("#AEE0E7") };
     private readonly DataGrid grid = new() { AutoGenerateColumns = false, HeadersVisibility = DataGridHeadersVisibility.Column, GridLinesVisibility = DataGridGridLinesVisibility.Horizontal, Background = Brush("#103148"), Foreground = Brushes.White, BorderBrush = Brush("#1A617D") };
@@ -35,7 +35,7 @@ internal sealed class MainWindow : Window
     private List<InstalledMod> installed = [];
     private readonly HashSet<string> expandedPackages = new(StringComparer.OrdinalIgnoreCase);
     private List<ApplyRecord> lastApply = [];
-    private string SelectedLocale => locale.SelectedItem as string ?? "pt-BR";
+    private string SelectedLocale => TranslationLocales.FromDisplayOption(locale.SelectedItem as string ?? "pt-BR");
 
     public MainWindow()
     {
@@ -64,7 +64,7 @@ internal sealed class MainWindow : Window
         Grid.SetColumnSpan(languageRow, 3);
         fields.Children.Add(languageRow);
         interfaceLanguage.SelectionChanged += (_, _) => { UiLanguage.Set(interfaceLanguage.SelectedIndex == 0); ApplyInterfaceLanguage(); RefreshRows(); };
-        locale.SelectionChanged += (_, _) => { if (locale.SelectedItem is string code) { UiLanguage.SetTranslationLocale(code); RefreshMissing(); RefreshRows(); } };
+        locale.SelectionChanged += (_, _) => { if (locale.SelectedItem is string code) { UiLanguage.SetTranslationLocale(TranslationLocales.FromDisplayOption(code)); RefreshMissing(); RefreshRows(); } };
         Grid.SetRow(fields, 1); root.Children.Add(fields);
 
         grid.ItemsSource = rows;
@@ -176,7 +176,7 @@ internal sealed class MainWindow : Window
         try
         {
             installed = service.ScanMods(mods.Text!);
-            var report = service.PrepareLibrary(library.Text!, installed);
+            var report = service.PrepareLibrary(library.Text!, installed, SelectedLocale);
             var imported = service.ImportInstalledTranslations(library.Text!, installed, SelectedLocale);
             Analyze(this, e);
             summary.Text = $"Busca concluída: {report.CreatedFolders} pasta(s), {report.CopiedI18nReferences} referência(s) i18n, {imported.Imported} tradução(ões) copiadas. Os mods instalados não foram alterados.";
@@ -346,6 +346,11 @@ internal sealed class MainWindow : Window
             source = chosen[0].Path.LocalPath;
             detected = TranslationLocales.FromFileName(source);
         }
+        if (TranslationLocales.IsDefaultReference(source))
+        {
+            await ImportDefaultAsync(mod, source);
+            return;
+        }
         if (detected is not null && !TranslationLocales.SameTargetLanguage(detected, SelectedLocale))
         {
             await NoticeAsync("Idioma diferente", $"A origem indica {detected}, mas o idioma escolhido é {SelectedLocale}. Nada foi copiado.");
@@ -364,6 +369,24 @@ internal sealed class MainWindow : Window
             }
             Analyze(this, new RoutedEventArgs());
             await NoticeAsync("Concluído", "A tradução foi guardada na biblioteca. A origem não foi alterada.");
+        }
+        catch (Exception ex) { await NoticeAsync("Não foi possível importar", ex.Message); }
+    }
+
+    private async Task ImportDefaultAsync(InstalledMod mod, string source)
+    {
+        if (!TranslationLocales.SameTargetLanguage(SelectedLocale, "en"))
+        {
+            await NoticeAsync("Idioma diferente", "default é a referência em inglês. Selecione en (default) para guardá-la; nada foi copiado.");
+            return;
+        }
+        if (!await ConfirmAsync("Confirmar importação",
+            $"Guardar {source} como referência em inglês?\n\nEla não será aplicada por cima do default de um mod atualizado.")) return;
+        try
+        {
+            service.ImportDefaultReference(library.Text!, mod, source);
+            Analyze(this, new RoutedEventArgs());
+            await NoticeAsync("Concluído", "Referência em inglês salva na biblioteca. A origem não foi alterada.");
         }
         catch (Exception ex) { await NoticeAsync("Não foi possível importar", ex.Message); }
     }

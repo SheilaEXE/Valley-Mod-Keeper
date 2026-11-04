@@ -414,7 +414,7 @@ internal sealed class MainForm : Form
 
     private sealed record PackageGroup(string Name, List<MatchResult> Members);
 
-    private string SelectedLocale => localePicker.SelectedItem as string ?? UiLanguage.TranslationLocale;
+    private string SelectedLocale => TranslationLocales.FromDisplayOption(localePicker.SelectedItem as string ?? UiLanguage.TranslationLocale);
 
     private void RefreshLocales()
     {
@@ -424,8 +424,8 @@ internal sealed class MainForm : Form
             .OrderBy(code => code, StringComparer.OrdinalIgnoreCase).ToList();
         localePicker.SelectedIndexChanged -= LocaleChanged;
         localePicker.Items.Clear();
-        localePicker.Items.AddRange(locales.Cast<object>().ToArray());
-        localePicker.SelectedItem = locales.FirstOrDefault(code => code.Equals(previous, StringComparison.OrdinalIgnoreCase)) ?? locales[0];
+        localePicker.Items.AddRange(locales.Select(TranslationLocales.DisplayOption).Cast<object>().ToArray());
+        localePicker.SelectedItem = TranslationLocales.DisplayOption(locales.FirstOrDefault(code => code.Equals(previous, StringComparison.OrdinalIgnoreCase)) ?? locales[0]);
         localePicker.SelectedIndexChanged += LocaleChanged;
         foreach (var result in results)
             if (result.Translation.Locale != SelectedLocale) result.Selected = false;
@@ -570,7 +570,7 @@ internal sealed class MainForm : Form
         {
             UseWaitCursor = true;
             var installed = service.ScanMods(modsBox.Text);
-            var report = service.PrepareLibrary(libraryBox.Text, installed);
+            var report = service.PrepareLibrary(libraryBox.Text, installed, SelectedLocale);
             var imported = service.ImportInstalledTranslations(libraryBox.Text, installed, SelectedLocale);
             Analyze();
             MessageBox.Show(this,
@@ -614,6 +614,11 @@ internal sealed class MainForm : Form
                 };
                 if (folderDialog.ShowDialog(this) != DialogResult.OK) return;
                 var sourceFolder = folderDialog.SelectedPath;
+                if (TranslationLocales.IsDefaultReference(sourceFolder))
+                {
+                    ImportDefaultForMod(mod, sourceFolder);
+                    return;
+                }
                 var detectedFolder = TranslationLocales.Normalize(Path.GetFileName(sourceFolder));
                 if (detectedFolder is not null && !TranslationLocales.SameTargetLanguage(detectedFolder, SelectedLocale))
                 {
@@ -652,6 +657,11 @@ internal sealed class MainForm : Form
                 MessageBox.Show(this, T("Arquivos content.<idioma>.json usam um formato especial. Esta importação manual é para arquivos i18n; não alterei nada.", "content.<language>.json files use a special format. Manual import is for i18n files; nothing was changed."), T("Formato diferente", "Different format"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
+            if (TranslationLocales.IsDefaultReference(sourcePath))
+            {
+                ImportDefaultForMod(mod, sourcePath);
+                return;
+            }
 
             var detected = TranslationLocales.FromFileName(sourcePath);
             if (detected is not null && !TranslationLocales.SameTargetLanguage(detected, SelectedLocale))
@@ -682,6 +692,26 @@ internal sealed class MainForm : Form
         {
             MessageBox.Show(this, ex.Message, T("Não foi possível importar", "Could not import"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    private void ImportDefaultForMod(InstalledMod mod, string sourcePath)
+    {
+        if (!TranslationLocales.SameTargetLanguage(SelectedLocale, "en"))
+        {
+            MessageBox.Show(this, T("default é a referência em inglês. Selecione en (default) para guardá-la; nada foi copiado.",
+                "default is the English reference. Select en (default) to save it; nothing was copied."),
+                T("Idioma diferente", "Different language"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+        if (MessageBox.Show(this,
+            string.Format(T("Guardar {0} como referência em inglês?\n\nEla não será aplicada por cima do default de um mod atualizado.",
+                "Save {0} as an English reference?\n\nIt will not overwrite an updated mod's default file."), sourcePath),
+            T("Confirmar importação", "Confirm import"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+        service.ImportDefaultReference(libraryBox.Text, mod, sourcePath);
+        Analyze();
+        MessageBox.Show(this, T("Referência em inglês salva na biblioteca. A origem não foi alterada.",
+            "English reference saved in the library. The source was not changed."),
+            T("Concluído", "Done"), MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private void UpdateSummary()

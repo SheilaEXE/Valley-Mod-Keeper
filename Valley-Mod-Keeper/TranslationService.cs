@@ -101,16 +101,17 @@ internal sealed class TranslationService
 
     /// <summary>
     /// Sets up safe source references for mods that were newly added to the Mods folder.
-    /// References are deliberately named default.json/content.json, which ScanLibrary ignores;
-    /// only a translation file with a language code can later be applied to a game mod.
+    /// The default i18n reference is kept only when English is selected. ScanLibrary ignores
+    /// it so it can never be applied over a mod's updated default translation.
     /// </summary>
-    public LibraryPreparationReport PrepareLibrary(string libraryRoot, IEnumerable<InstalledMod> mods)
+    public LibraryPreparationReport PrepareLibrary(string libraryRoot, IEnumerable<InstalledMod> mods, string selectedLocale)
     {
         var createdFolders = 0;
         var copiedI18n = 0;
         var copiedContent = 0;
         var alreadyPrepared = 0;
 
+        var includeEnglishDefault = TranslationLocales.SameTargetLanguage(selectedLocale, "en");
         foreach (var mod in mods)
         {
         var sourceI18n = Path.Combine(mod.Directory, "i18n", "default.json");
@@ -127,7 +128,7 @@ internal sealed class TranslationService
             }
 
             var copiedAnything = false;
-            if (File.Exists(sourceI18n))
+            if (includeEnglishDefault && File.Exists(sourceI18n))
             {
                 var targetI18n = Path.Combine(libraryModFolder, "i18n", "default.json");
                 if (!File.Exists(targetI18n))
@@ -138,7 +139,7 @@ internal sealed class TranslationService
                     copiedAnything = true;
                 }
             }
-            if (Directory.Exists(sourceDefaultFolder))
+            if (includeEnglishDefault && Directory.Exists(sourceDefaultFolder))
             {
                 var targetDefaultFolder = Path.Combine(libraryModFolder, "i18n", "default");
                 if (!Directory.Exists(targetDefaultFolder))
@@ -215,7 +216,10 @@ internal sealed class TranslationService
             if (represented.Contains(mod.Directory)) continue;
             var i18n = Path.Combine(mod.Directory, "i18n");
             if (!Directory.Exists(i18n)) continue;
-            var hasLocale = HasI18nLocale(i18n, locale);
+            var hasLocale = HasI18nLocale(i18n, locale) ||
+                (TranslationLocales.SameTargetLanguage(locale, "en") &&
+                 (File.Exists(Path.Combine(i18n, "default.json")) ||
+                  (Directory.Exists(Path.Combine(i18n, "default")) && ContainsJson(Path.Combine(i18n, "default")))));
             if (hasLocale) continue;
             var placeholder = new TranslationUnit(mod.PackageFolder, mod.FolderName, "",
                 Path.Combine("i18n", locale + ".json"), false, mod.RelativeFolder, Locale: locale);
@@ -233,6 +237,9 @@ internal sealed class TranslationService
 
     public string ImportI18nFile(string libraryRoot, InstalledMod mod, string sourcePath, string locale, bool overwrite)
     {
+        if (TranslationLocales.IsDefaultReference(sourcePath))
+            throw new InvalidOperationException(UiLanguage.Text("O arquivo default é uma referência em inglês, não uma tradução para aplicar. Selecione en (default) para guardá-lo como referência.",
+                "The default file is an English reference, not a translation to apply. Select en (default) to save it as a reference."));
         locale = TranslationLocales.Normalize(locale)
             ?? throw new InvalidOperationException(UiLanguage.Text("Código de idioma inválido.", "Invalid language code."));
         if (!File.Exists(sourcePath))
@@ -270,6 +277,9 @@ internal sealed class TranslationService
 
     public string ImportI18nDirectory(string libraryRoot, InstalledMod mod, string sourcePath, string locale)
     {
+        if (TranslationLocales.IsDefaultReference(sourcePath))
+            throw new InvalidOperationException(UiLanguage.Text("A pasta default é uma referência em inglês, não uma tradução para aplicar. Selecione en (default) para guardá-la como referência.",
+                "The default folder is an English reference, not a translation to apply. Select en (default) to save it as a reference."));
         locale = TranslationLocales.Normalize(locale)
             ?? throw new InvalidOperationException(UiLanguage.Text("Código de idioma inválido.", "Invalid language code."));
         if (!Directory.Exists(sourcePath) || !ContainsJson(sourcePath))
@@ -279,6 +289,37 @@ internal sealed class TranslationService
         var destination = Path.Combine(libraryRoot, mod.RelativeFolder, "i18n", locale);
         if (Path.GetFullPath(sourcePath).Equals(Path.GetFullPath(destination), StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException(UiLanguage.Text("Essa pasta já está na biblioteca.", "This folder is already in the library."));
+        CopyPath(sourcePath, destination, false);
+        return destination;
+    }
+
+    public string ImportDefaultReference(string libraryRoot, InstalledMod mod, string sourcePath)
+    {
+        var isFile = File.Exists(sourcePath);
+        var isFolder = Directory.Exists(sourcePath);
+        var name = Path.GetFileName(sourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if ((!isFile || !name.Equals("default.json", StringComparison.OrdinalIgnoreCase)) &&
+            (!isFolder || !name.Equals("default", StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException(UiLanguage.Text("Escolha i18n/default.json ou a pasta i18n/default.",
+                "Choose i18n/default.json or the i18n/default folder."));
+        if (isFolder && !ContainsJson(sourcePath))
+            throw new InvalidOperationException(UiLanguage.Text("A pasta default não contém arquivos JSON.",
+                "The default folder contains no JSON files."));
+        if (isFile)
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(sourcePath), ManifestJsonOptions);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object)
+                throw new InvalidOperationException(UiLanguage.Text("O arquivo default não contém um objeto JSON.",
+                    "The default file does not contain a JSON object."));
+        }
+
+        var destination = Path.Combine(libraryRoot, mod.RelativeFolder, "i18n", isFile ? "default.json" : "default");
+        if (Path.GetFullPath(sourcePath).Equals(Path.GetFullPath(destination), StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(UiLanguage.Text("Essa referência já está na biblioteca.",
+                "This reference is already in the library."));
+        if (File.Exists(destination) || Directory.Exists(destination))
+            throw new IOException(UiLanguage.Text("A referência default já existe na biblioteca; nada foi substituído.",
+                "The default reference already exists in the library; nothing was replaced."));
         CopyPath(sourcePath, destination, false);
         return destination;
     }

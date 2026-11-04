@@ -32,6 +32,8 @@ The installer does not install or remove game mods. Check both folder paths in t
 
 The application scans your **translation library** separately from the game's **Mods** folder. A translation may remain listed after its mod is disabled or renamed; an unmatched entry is not installed or applied automatically. It recognizes locale files such as `i18n/es.json`, locale folders such as `i18n/fr/`, selected `assets/Dialogues/<locale>` folders, and supported `content.<locale>.json` text maps. For Portuguese translations, `pt` and `pt-BR` are treated as the same destination language to avoid replacing an existing translation.
 
+Select **en (default)** to save an `en.json` translation and, when present, keep `i18n/default.json` or `i18n/default/` as an English reference. The default reference is not copied for other selected languages and is never applied over a mod's updated default file.
+
 Packages with multiple components are grouped in the list. Selecting a package selects only its safely matched components; uncertain destinations must be reviewed individually. Existing translations in the Mods folder are preserved. The application does not modify installed mods when it scans or imports translations into the library.
 
 ---

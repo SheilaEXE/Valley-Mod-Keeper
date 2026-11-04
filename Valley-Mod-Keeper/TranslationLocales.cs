@@ -5,7 +5,21 @@ namespace TradutorModsStardew;
 
 internal static class TranslationLocales
 {
+    public const string EnglishDefaultOption = "en (default)";
     private static readonly Regex CodePattern = new(@"^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})*$", RegexOptions.Compiled);
+
+    public static string DisplayOption(string locale) =>
+        locale.Equals("en", StringComparison.OrdinalIgnoreCase) ? EnglishDefaultOption : locale;
+
+    public static string FromDisplayOption(string option) =>
+        option.Equals(EnglishDefaultOption, StringComparison.OrdinalIgnoreCase) ? "en" : option;
+
+    public static bool IsDefaultReference(string path)
+    {
+        var name = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        return name.Equals("default", StringComparison.OrdinalIgnoreCase) ||
+            name.Equals("default.json", StringComparison.OrdinalIgnoreCase);
+    }
 
     public static string? FromFileName(string fileName)
     {
